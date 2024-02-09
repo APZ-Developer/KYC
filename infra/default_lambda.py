@@ -89,7 +89,7 @@ class RivDefaultFunction(Construct):
       tracing= lambda_.Tracing.ACTIVE,
       vpc= riv_stack.vpc,
       memory_size=512,
-      allow_all_outbound=True,
+#      allow_all_outbound=True,
       vpc_subnets=ec2.SubnetSelection(subnet_group_name=subnet_group_name),
       security_groups=[riv_stack.security_group],
       environment=environment
