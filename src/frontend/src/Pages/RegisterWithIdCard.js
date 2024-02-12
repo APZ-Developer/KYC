@@ -4,7 +4,7 @@ import Liveness from '../Components/Liveness'
 import Form from "@awsui/components-react/form";
 import SpaceBetween from "@awsui/components-react/space-between";
 import { TextField } from '@aws-amplify/ui-react';
-import { ImUser } from "react-icons/im";
+import { ImUser,ImCalendar, ImUserTie } from "react-icons/im";
 import { Table, TableCell, TableRow } from '@aws-amplify/ui-react';
 import { useNavigate } from "react-router-dom"
 import ErrorMessage from '../Error'
@@ -35,6 +35,7 @@ const RegisterWithIdCard = () => {
     const { tokens } = useTheme();
     // const canvasRef = useRef(null)
     const [id, setId] = useState(null)
+    const [dob, setDOB] = useState(null)    
     const [image, setImage] = useState({ 'imageName': '', 'imageFile': '', 'base64Image': '', width: '', height: '', refImage: '' })
     const [preview, setPreview] = useState()
     const [properties, setProperties] = useState({})
@@ -51,6 +52,7 @@ const RegisterWithIdCard = () => {
     const [registerSuccess, setregisterSuccess] = useState();
     const [jsonResponse, setJsonResponse] = useState(null)
     const navigate = useNavigate()
+    const [formErrors, setFormErrors] = useState([]);
 
 
     const getReferenceImage = (image) => {
@@ -198,7 +200,40 @@ const RegisterWithIdCard = () => {
             setLoading(false)
             if (JSON.stringify(responseData.Properties) !== "{}") {
                 setProperties(responseData)
+                const newErrors = [];
                 //drawRectangleIDCard(responseData)
+                // Find the expiry date within the properties object
+		const expiryDate = new Date(responseData.Properties.EXPIRATION_DATE);
+		const currentDate = new Date();
+		const threeMonthsFromNow = new Date();
+		threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+
+		// Check if the expiry date is within 3 months from now
+		if (expiryDate <= threeMonthsFromNow) {
+		    newErrors.push("ERROR: ID expired or about to expire in 3 months	");
+		    //setHasFormError("ID expired or about to expire in 3 months");
+		}
+		// Check if the username matches with the ID number
+		if (id !== responseData.Properties.DOCUMENT_NUMBER) {
+		    newErrors.push("ERROR: Username and ID Number don't match	");
+		    //setHasFormError("Username and ID Number doesn't match");
+		}
+		// Check if the DoB matches with ID
+		const input_dob = new Date(dob)
+		const id_dob = new Date(responseData.Properties.DATE_OF_BIRTH)
+		if (input_dob !== id_dob) {
+		    newErrors.push("ERROR: Date of Birth doesn't match with ID	");
+		    //setHasFormError("Date of Birth doesn't match with ID");
+		}
+		// Set form errors with the array of error messages
+		setHasFormError(newErrors);
+		return (
+		    <div>
+			{formErrors.map((error, index) => (
+			    <p key={index}>{error}</p>
+			))}
+		    </div>
+		);
             } else {
                 setHasFormError("We are unable to validate your document at this time. Please try again later.")
             }
@@ -389,6 +424,31 @@ const RegisterWithIdCard = () => {
                                         innerStartComponent={
                                             <FieldGroupIcon ariaLabel="" >
                                                 <ImUser />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setDOB(e.target.value); setError(error => ({ ...error, dobError: false })) }}
+                                        label={
+                                            <Text>
+                                                Date of birth
+                                                <Text as="span" fontSize="0.8rem" color="red">
+                                                    {' '}
+                                                    (required)
+                                                </Text>
+                                            </Text>
+                                        }
+                                        type="date"
+                                        size="large"
+                                        color="black"
+                                        value={dob}
+                                        hasError={error.dobError}
+                                        errorMessage="Please enter date of birth (yyyy-mm-dd)"
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImCalendar />
                                             </FieldGroupIcon>
                                         }
 
