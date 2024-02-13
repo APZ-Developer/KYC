@@ -209,21 +209,18 @@ const RegisterWithIdCard = () => {
 		threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
 		// Check if the expiry date is within 3 months from now
-		if (expiryDate <= threeMonthsFromNow) {
+		if (expiryDate.getTime() <= threeMonthsFromNow.getTime()) {
 		    newErrors.push("ERROR: ID expired or about to expire in 3 months	");
-		    //setHasFormError("ID expired or about to expire in 3 months");
 		}
 		// Check if the username matches with the ID number
 		if (id !== responseData.Properties.DOCUMENT_NUMBER) {
 		    newErrors.push("ERROR: Username and ID Number don't match	");
-		    //setHasFormError("Username and ID Number doesn't match");
 		}
 		// Check if the DoB matches with ID
-		const input_dob = new Date(dob)
-		const id_dob = new Date(responseData.Properties.DATE_OF_BIRTH)
-		if (input_dob !== id_dob) {
+		const input_DOB = new Date(dob);
+		const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
+		if (input_DOB.getDate() !== id_DOB.getDate() || input_DOB.getMonth() !== id_DOB.getMonth() || input_DOB.getFullYear() !== id_DOB.getFullYear()) {
 		    newErrors.push("ERROR: Date of Birth doesn't match with ID	");
-		    //setHasFormError("Date of Birth doesn't match with ID");
 		}
 		// Set form errors with the array of error messages
 		setHasFormError(newErrors);
