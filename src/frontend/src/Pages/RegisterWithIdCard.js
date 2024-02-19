@@ -35,6 +35,9 @@ const RegisterWithIdCard = () => {
     const { tokens } = useTheme();
     // const canvasRef = useRef(null)
     const [id, setId] = useState(null)
+    const [firstName, setFirstName] = useState(null)
+    const [middleName, setMiddleName] = useState(null)
+    const [lastName, setLastName] = useState(null)
     const [dob, setDOB] = useState(null)    
     const [image, setImage] = useState({ 'imageName': '', 'imageFile': '', 'base64Image': '', width: '', height: '', refImage: '' })
     const [preview, setPreview] = useState()
@@ -43,7 +46,7 @@ const RegisterWithIdCard = () => {
     const [livenessStart, setLivenessStart] = useState(false)
     const [step1, setStep1] = useState(true)
     const [step2, setStep2] = useState(false)
-    const [error, setError] = useState({ 'idError': false })
+    const [error, setError] = useState({ 'idError': false, 'firstNameError': false, 'lastNameError': false, 'dobError': false })
     const [loading, setLoading] = useState(false)
     const [formSubmit, setFormSubmit] = useState(true)
     const [referenceImage, setreferenceImage] = useState(null)
@@ -87,6 +90,17 @@ const RegisterWithIdCard = () => {
         var isError = false;
         if (id === '' || id === null) {
             setError(error => ({ ...error, idError: true }))
+            isError = true
+        }
+        if (firstName === '' || firstName === null) {
+            setError(error => ({ ...error, firstNameError: true }))
+            isError = true
+        }
+        if (lastName === '' || lastName === null) {
+            setError(error => ({ ...error, lastNameError: true }))
+            isError = true
+        } if (dob === '' || dob === null) {
+            setError(error => ({ ...error, dobError: true }))
             isError = true
         }
         return isError;
@@ -135,7 +149,7 @@ const RegisterWithIdCard = () => {
     }
 
     const handleNextSubmit = () => {
-        setError({ 'idError': false })
+        setError({ 'idError': false, 'firstNameError': false, 'lastNameError': false, 'dobError': false })
         if (!errorCheck()) {
             setHasFormError('')
             const requestData = {
@@ -210,17 +224,29 @@ const RegisterWithIdCard = () => {
 
 		// Check if the expiry date is within 3 months from now
 		if (expiryDate.getTime() <= threeMonthsFromNow.getTime()) {
-		    newErrors.push("ERROR: ID expired or about to expire in 3 months	");
+		    newErrors.push("ERROR: ID expired or about to expire in 3 months. ");
 		}
 		// Check if the username matches with the ID number
 		if (id !== responseData.Properties.DOCUMENT_NUMBER) {
-		    newErrors.push("ERROR: Username and ID Number don't match	");
+		    newErrors.push("ERROR: Username and ID Number don't match. ");
 		}
 		// Check if the DoB matches with ID
 		const input_DOB = new Date(dob);
 		const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
 		if (input_DOB.getDate() !== id_DOB.getDate() || input_DOB.getMonth() !== id_DOB.getMonth() || input_DOB.getFullYear() !== id_DOB.getFullYear()) {
-		    newErrors.push("ERROR: Date of Birth doesn't match with ID	");
+		    newErrors.push("ERROR: Date of Birth doesn't match with ID. ");
+		}
+		// Check if the First Name matches with ID
+		if(firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
+		    newErrors.push("ERROR: First Name doesn't match with ID. ");
+		}
+		// Check if the Middle Name matches with ID if available
+		if(middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase() && responseData.Properties.MIDDLE_NAME.trim() !== '' ) {
+		    newErrors.push("ERROR: Middle Name doesn't match with ID. ");
+		}
+		// Check if the Last Name matches with ID
+		if(lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
+		    newErrors.push("ERROR: Last Name doesn't match with ID. ");
 		}
 		// Set form errors with the array of error messages
 		setHasFormError(newErrors);
@@ -298,28 +324,13 @@ const RegisterWithIdCard = () => {
         <>
             <View>
                 <Heading
-                    level={1}
+                    level={4}
                     color="black"
-                    marginTop={tokens.space.large}
-                    marginBottom={tokens.space.large}
+                    marginTop={tokens.space.small}
+                    marginBottom={tokens.space.small}
                 >
                     Onboarding user using Identity verification.
                 </Heading>
-
-                <SliderField
-                    label="Slider"
-                    min={1}
-                    max={4}
-                    step={sliderValue}
-                    value={sliderValue}
-                    size="large"
-                    isDisabled
-                    isValueHidden
-                    labelHidden
-                    filledTrackColor='#ec7211'
-                    marginBottom={tokens.space.large}
-                />
-
 
                 {hasformError !== '' &&
                     <>
@@ -413,6 +424,7 @@ const RegisterWithIdCard = () => {
                                             </Text>
                                         }
                                         onChange={e => { setId(e.target.value); setError(error => ({ ...error, idError: false })) }}
+                                        marginBottom={tokens.space.large}
                                         size="large"
                                         color="black"
                                         hasError={error.idError}
@@ -421,6 +433,75 @@ const RegisterWithIdCard = () => {
                                         innerStartComponent={
                                             <FieldGroupIcon ariaLabel="" >
                                                 <ImUser />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setFirstName(e.target.value); setError(error => ({ ...error, firstNameError: false })) }}
+                                        label={
+                                            <Text>
+                                                First name
+                                                <Text as="span" fontSize="0.8rem" color="red">
+                                                    {' '}
+                                                    (required)
+                                                </Text>
+                                            </Text>
+                                        }
+                                        marginBottom={tokens.space.large}
+                                        size="large"
+                                        color="black"
+                                        value={firstName}
+                                        hasError={error.firstNameError}
+                                        errorMessage="Please enter first name"
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImUserTie />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setMiddleName(e.target.value) }}
+                                        label={
+                                            <Text>
+                                                Middle name
+                                            </Text>
+                                        }
+                                        marginBottom={tokens.space.large}
+                                        size="large"
+                                        color="black"
+                                        value={middleName}
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImUserTie />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setLastName(e.target.value); setError(error => ({ ...error, lastNameError: false })) }}
+                                        label={
+                                            <Text>
+                                                Last name
+                                                <Text as="span" fontSize="0.8rem" color="red">
+                                                    {' '}
+                                                    (required)
+                                                </Text>
+                                            </Text>
+                                        }
+                                        marginBottom={tokens.space.large}
+                                        size="large"
+                                        color="black"
+                                        value={lastName}
+                                        hasError={error.lastNameError}
+                                        errorMessage="Please enter last name"
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImUserTie />
                                             </FieldGroupIcon>
                                         }
 
@@ -604,20 +685,7 @@ const RegisterWithIdCard = () => {
 
             </Form>
 
-            {jsonResponse &&
-                <>
-                    <Heading
-                        level={5}
-                        color="black"
-                        marginTop={tokens.space.large}
-                        marginBottom={tokens.space.large}
-                    >
-                        Response:
-                    </Heading>
-                    <JSONTree data={jsonResponse} 
-                    valueRenderer={(raw) => raw.length > 200  ? (<span style={{whiteSpace: 'nowrap',display:'inline-block',maxWidth: '100%',overflow:'hidden',textOverflow: 'ellipsis',verticalAlign:'middle'}} >{raw}</span>) : raw } />
-                </>
-            }
+            
         </>
     );
 }

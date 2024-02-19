@@ -54,22 +54,7 @@ function Success() {
 
             </View>
 
-            {responseData &&
-                <>
-                    <Heading
-                        level={5}
-                        color="black"
-                        marginTop={tokens.space.large}
-                        marginBottom={tokens.space.large}
-                    >
-                        Response:
-                    </Heading>
-                    <JSONTree data={responseData} />
-                </>
-            }
-
-
-
+            
         </>
 
 
