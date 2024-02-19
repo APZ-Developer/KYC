@@ -16,7 +16,7 @@ import {
     useTheme,
     Button,
     Alert,
-    SliderField,
+//    SliderField,
     Flex,
     View,
     Card,
@@ -25,7 +25,7 @@ import {
 
 
 } from '@aws-amplify/ui-react';
-import { JSONTree } from 'react-json-tree';
+//import { JSONTree } from 'react-json-tree';
 
 
 
@@ -39,6 +39,8 @@ const RegisterWithIdCard = () => {
     const [middleName, setMiddleName] = useState(null)
     const [lastName, setLastName] = useState(null)
     const [dob, setDOB] = useState(null)    
+    const [cellphone, setcellphone] = useState(null)    
+    const [email, setemail] = useState(null)    
     const [image, setImage] = useState({ 'imageName': '', 'imageFile': '', 'base64Image': '', width: '', height: '', refImage: '' })
     const [preview, setPreview] = useState()
     const [properties, setProperties] = useState({})
@@ -88,6 +90,9 @@ const RegisterWithIdCard = () => {
 
     function errorCheck() {
         var isError = false;
+        const cellphoneRegex = /^\d+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         if (id === '' || id === null) {
             setError(error => ({ ...error, idError: true }))
             isError = true
@@ -99,8 +104,17 @@ const RegisterWithIdCard = () => {
         if (lastName === '' || lastName === null) {
             setError(error => ({ ...error, lastNameError: true }))
             isError = true
-        } if (dob === '' || dob === null) {
+        }
+        if (dob === '' || dob === null) {
             setError(error => ({ ...error, dobError: true }))
+            isError = true
+        }
+        if (cellphone === '' || cellphone === null || !cellphoneRegex.test(cellphone)) {
+            setError(error => ({ ...error, cellphoneError: true }))
+            isError = true
+        }
+        if (email === '' || email === null || !emailRegex.test(email)) {
+            setError(error => ({ ...error, emailError: true }))
             isError = true
         }
         return isError;
@@ -237,15 +251,15 @@ const RegisterWithIdCard = () => {
 		    newErrors.push("ERROR: Date of Birth doesn't match with ID. ");
 		}
 		// Check if the First Name matches with ID
-		if(firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
+		if(responseData.Properties.FIRST_NAME.trim() !== '' && firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: First Name doesn't match with ID. ");
 		}
 		// Check if the Middle Name matches with ID if available
-		if(middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase() && responseData.Properties.MIDDLE_NAME.trim() !== '' ) {
+		if(responseData.Properties.MIDDLE_NAME.trim() !== '' && middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: Middle Name doesn't match with ID. ");
 		}
 		// Check if the Last Name matches with ID
-		if(lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
+		if(responseData.Properties.LAST_NAME.trim() !== '' && lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: Last Name doesn't match with ID. ");
 		}
 		// Set form errors with the array of error messages
@@ -519,6 +533,7 @@ const RegisterWithIdCard = () => {
                                             </Text>
                                         }
                                         type="date"
+                                        marginBottom={tokens.space.large}
                                         size="large"
                                         color="black"
                                         value={dob}
@@ -527,6 +542,56 @@ const RegisterWithIdCard = () => {
                                         innerStartComponent={
                                             <FieldGroupIcon ariaLabel="">
                                                 <ImCalendar />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setcellphone(e.target.value); setError(error => ({ ...error, cellphoneError: false })) }}
+                                        label={
+                                            <Text>
+                                                Cell Phone
+                                                <Text as="span" fontSize="0.8rem" color="red">
+                                                    {' '}
+                                                    (required)
+                                                </Text>
+                                            </Text>
+                                        }
+                                        marginBottom={tokens.space.large}
+                                        size="large"
+                                        color="black"
+                                        value={cellphone}
+                                        hasError={error.cellphoneError}
+                                        errorMessage="Please enter valid Cell Phone number"
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImUserTie />
+                                            </FieldGroupIcon>
+                                        }
+
+
+                                    />
+                                    <TextField
+                                        onChange={e => { setemail(e.target.value); setError(error => ({ ...error, emailError: false })) }}
+                                        label={
+                                            <Text>
+                                                Email Address
+                                                <Text as="span" fontSize="0.8rem" color="red">
+                                                    {' '}
+                                                    (required)
+                                                </Text>
+                                            </Text>
+                                        }
+                                        marginBottom={tokens.space.large}
+                                        size="large"
+                                        color="black"
+                                        value={email}
+                                        hasError={error.emailError}
+                                        errorMessage="Please enter valid email address"
+                                        innerStartComponent={
+                                            <FieldGroupIcon ariaLabel="">
+                                                <ImUserTie />
                                             </FieldGroupIcon>
                                         }
 
