@@ -191,8 +191,8 @@ function Liveness({ referenceImage, livenessImageData }) {
                                     isDismissible={true}
                                     hasIcon={true}
                                 >
-                                    <Heading level={6}>Liveness Session ID: {sessionId}
-                                        {imageData && (<> and Confidence Score: {imageData.Confidence}% </>)}
+                                    <Heading level={6}>
+                                        {imageData && (<> Confidence Score: {imageData.Confidence.toFixed(4)}% </>)}
                                     </Heading>
 
                                 </Alert>
@@ -225,24 +225,6 @@ function Liveness({ referenceImage, livenessImageData }) {
 
                                 ) : (
                                     <>
-                                        <Flex
-                                            direction="row"
-                                            justifyContent="center"
-                                            alignItems="center"
-                                            alignContent="center"
-                                            wrap="nowrap"
-                                            gap="2rem"
-
-                                        >
-                                            <SliderField
-                                                marginTop={tokens.space.large}
-                                                label="Set liveness score:"
-                                                defaultValue={userSelectedConfidence}
-                                                onChange={setSliderValue}
-                                                formatValue={formatValue}
-
-                                            />
-                                        </Flex>
                                         <Card>
                                             <Flex
                                                 direction="row"

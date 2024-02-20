@@ -55,6 +55,7 @@ const RegisterWithIdCard = () => {
     const [hasformError, setHasFormError] = React.useState('');
     const [sliderValue, setSliderValue] = useState(1);
     const [registerSuccess, setregisterSuccess] = useState();
+    const [registerFail, setregisterFail] = useState();
     const [jsonResponse, setJsonResponse] = useState(null)
     const navigate = useNavigate()
     const [formErrors, setFormErrors] = useState([]);
@@ -196,6 +197,7 @@ const RegisterWithIdCard = () => {
         setLivenessStart(false)
         setStep2(true)
         setSliderValue(2)
+        setregisterFail(false)
      // drawRectangleIDCard(properties)
     }
 
@@ -210,7 +212,7 @@ const RegisterWithIdCard = () => {
         setLivenessImageData(null)
         setFormSubmit(true)
         setLivenessStart(true)
-
+		setregisterFail(false)
     }
 
 
@@ -310,6 +312,8 @@ const RegisterWithIdCard = () => {
 
             } else {
                 console.log(responseData.error)
+                let responseFailData = JSON.parse(responseData.input)
+                setregisterFail({ "input_id": responseFailData.inputRequest.UserId, "properties": responseFailData.inputRequest.Properties })
                 if (responseData.error === 'FaceNotMatchWithIDCard') {
                     console.log(responseData.error)
                     setHasFormError(ErrorMessage['FaceNotMatchWithIDCard'])
@@ -747,6 +751,52 @@ const RegisterWithIdCard = () => {
                     }
                 >
                 </Navigate >}
+                {registerFail &&
+                	(
+						<Table variation="striped" color="black">
+						    {/* Table rows */}
+						    <TableRow>
+						        <TableCell>User Name</TableCell>
+						        <TableCell>{id}</TableCell>
+						        <TableCell>{registerFail.properties.Properties.DOCUMENT_NUMBER}</TableCell>
+						        <TableCell>{id === registerFail.properties.Properties.DOCUMENT_NUMBER ? 'Pass' : 'Fail'}</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>First Name</TableCell>
+						        <TableCell>{firstName}</TableCell>
+						        <TableCell>{registerFail.properties.Properties.FIRST_NAME}</TableCell>
+						        <TableCell>{firstName.trim().toLowerCase() === registerFail.properties.Properties.FIRST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Middle Name</TableCell>
+						        <TableCell>{middleName}</TableCell>
+						        <TableCell>{registerFail.properties.Properties.MIDDLE_NAME}</TableCell>
+						        <TableCell>{middleName.trim().toLowerCase() === registerFail.properties.Properties.MIDDLE_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Last Name</TableCell>
+						        <TableCell>{lastName}</TableCell>
+						        <TableCell>{registerFail.properties.Properties.LAST_NAME}</TableCell>
+						        <TableCell>{lastName.trim().toLowerCase() === registerFail.properties.Properties.LAST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Date of Birth</TableCell>
+						        <TableCell>{dob}</TableCell>
+						        <TableCell>{registerFail.properties.Properties.DATE_OF_BIRTH}</TableCell>
+						        <TableCell>{dob && registerFail.properties.Properties.DATE_OF_BIRTH && (() => {
+									const dobDate = new Date(dob);
+									const regDate = new Date(registerFail.properties.Properties.DATE_OF_BIRTH);
+									return (
+									  dobDate.getFullYear() === regDate.getFullYear() &&
+									  dobDate.getMonth() === regDate.getMonth() &&
+									  dobDate.getDate() === regDate.getDate()
+									) ? 'Pass' : 'Fail';
+								  })()}
+								</TableCell>
+						    </TableRow>
+						</Table>
+					)
+                }
 
             </Form>
 
