@@ -186,16 +186,9 @@ function Liveness({ referenceImage, livenessImageData }) {
                                         }
                                     </>
                                 }
-                                <Alert
-                                    variation="info"
-                                    isDismissible={true}
-                                    hasIcon={true}
-                                >
-                                    <Heading level={6}>
-                                        {imageData && (<> Confidence Score: {imageData.Confidence.toFixed(4)}% </>)}
-                                    </Heading>
-
-                                </Alert>
+                                <Heading level={6}>
+                                    {imageData && (<> Confidence Score: {imageData.Confidence.toFixed(4)}% </>)}
+                                </Heading>
 
                                 {(imageData && imageData.ReferenceImageBase64) ? (
                                     <>

@@ -122,6 +122,16 @@ const RegisterWithIdCard = () => {
 
     }
 
+    function deleteUsers() {
+        console.log('User deleted')
+        const options = { headers: {
+          'Content-Type': 'application/json'
+        }}
+        API.get("identityverification", "reset-user", options).then(response => {
+            navigate("/");
+         });
+    }
+    
     const handleDocumentUpload = (event) => {
         const reader = new FileReader();
         reader.onloadend = function () {
@@ -175,14 +185,16 @@ const RegisterWithIdCard = () => {
                 let responseData = response;
                 console.log(responseData)
                 setJsonResponse(responseData)
-                if (responseData.Reason === "User not Exist") {
-                    setStep2(true)
-                    setStep1(false)
-                    setSliderValue(2)
-                } else {
+                if (responseData.Reason !== "User not Exist") {
+                    deleteUsers()
+                }
+                setStep2(true)
+                setStep1(false)
+                setSliderValue(2)
+/*                } else {
                     setHasFormError(ErrorMessage['UserAlreadyExists'])
                     setError(error => ({ ...error, idError: true }))
-                }
+                }*/
             })
                 .catch(error => {
                     console.log(error.response);
@@ -246,24 +258,38 @@ const RegisterWithIdCard = () => {
 		if (id !== responseData.Properties.DOCUMENT_NUMBER) {
 		    newErrors.push("ERROR: Username and ID Number don't match. ");
 		}
+		// Check if ID number is only numeric
+		const isNumeric = /^\d+$/.test(responseData.Properties.DOCUMENT_NUMBER);
+		const idDate = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(0, 2), 10)
+		const idMonth = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(2, 4), 10)
+		const idYear = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(4, 6), 10)
 		// Check if the DoB matches with ID
 		const input_DOB = new Date(dob);
 		const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
+		
 		if (input_DOB.getDate() !== id_DOB.getDate() || input_DOB.getMonth() !== id_DOB.getMonth() || input_DOB.getFullYear() !== id_DOB.getFullYear()) {
-		    newErrors.push("ERROR: Date of Birth doesn't match with ID. ");
+		    newErrors.push("ERROR: Date of Birth doesn't match as per ID. ");
 		}
+		else if(isNumeric && (idDate !== id_DOB.getDate() || idMonth !== id_DOB.getMonth() || idYear !== id_DOB.getFullYear()%100))
+		{
+			newErrors.push("ERROR: Date of Birth doesn't match with ID. ");
+		}
+		
 		// Check if the First Name matches with ID
 		if(responseData.Properties.FIRST_NAME.trim() !== '' && firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: First Name doesn't match with ID. ");
 		}
+		
 		// Check if the Middle Name matches with ID if available
 		if(responseData.Properties.MIDDLE_NAME.trim() !== '' && middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: Middle Name doesn't match with ID. ");
 		}
+		
 		// Check if the Last Name matches with ID
 		if(responseData.Properties.LAST_NAME.trim() !== '' && lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
 		    newErrors.push("ERROR: Last Name doesn't match with ID. ");
 		}
+		
 		// Set form errors with the array of error messages
 		setHasFormError(newErrors);
 		return (
@@ -526,7 +552,24 @@ const RegisterWithIdCard = () => {
 
                                     />
                                     <TextField
-                                        onChange={e => { setDOB(e.target.value); setError(error => ({ ...error, dobError: false })) }}
+                                        onChange={e => {
+                                            const inputValue = e.target.value;
+                                            // Check if the input value matches the YYYY-MM-DD format
+                                            const regex = /^\d{4}-\d{2}-\d{2}$/;
+                                            if (regex.test(inputValue)) {
+                                                const year = inputValue.slice(0, 4); // Extract the year part
+                                                if (year.length === 4) {
+                                                    setDOB(inputValue); // Update the state if the year has 4 digits
+                                                    setError(error => ({ ...error, dobError: false }));
+                                                } else {
+                                                    // Show error if the year doesn't have exactly 4 digits
+                                                    setError(error => ({ ...error, dobError: true }));
+                                                }
+                                            } else {
+                                                // Show error if the input format is incorrect
+                                                setError(error => ({ ...error, dobError: true }));
+                                            }
+                                        }}
                                         label={
                                             <Text>
                                                 Date of birth
@@ -548,8 +591,6 @@ const RegisterWithIdCard = () => {
                                                 <ImCalendar />
                                             </FieldGroupIcon>
                                         }
-
-
                                     />
                                     <TextField
                                         onChange={e => { setcellphone(e.target.value); setError(error => ({ ...error, cellphoneError: false })) }}
