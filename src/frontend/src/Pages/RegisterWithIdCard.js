@@ -60,7 +60,6 @@ const RegisterWithIdCard = () => {
     const navigate = useNavigate()
     const [formErrors, setFormErrors] = useState([]);
 
-
     const getReferenceImage = (image) => {
         setHasFormError('')
         if (!errorCheck() && image !== null && image.ReferenceImage) {
@@ -133,6 +132,20 @@ const RegisterWithIdCard = () => {
     }
     
     const handleDocumentUpload = (event) => {
+        setHasFormError('')
+        const supportedFormats = ['image/jpeg', 'image/jpg', 'image/png'];
+       // Check if a file is uploaded
+        if (event.target.files.length === 0) {
+            // Handle the case where no file is selected
+            return;
+        }
+
+        // Check if the file format is supported
+        if (!supportedFormats.includes(event.target.files[0].type)) {
+            // Handle the case where the file format is not supported
+            setHasFormError("Unsupported file format. Please upload a JPEG, JPG, or PNG file.");
+            return;
+        }
         const reader = new FileReader();
         reader.onloadend = function () {
             var filedata = reader.result;
@@ -245,61 +258,66 @@ const RegisterWithIdCard = () => {
                 const newErrors = [];
                 //drawRectangleIDCard(responseData)
                 // Find the expiry date within the properties object
-		const expiryDate = new Date(responseData.Properties.EXPIRATION_DATE);
-		const currentDate = new Date();
-		const threeMonthsFromNow = new Date();
-		threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+		        const expiryDate = new Date(responseData.Properties.EXPIRATION_DATE);
+		        const currentDate = new Date();
+		        const threeMonthsFromNow = new Date();
+		        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
-		// Check if the expiry date is within 3 months from now
-		if (expiryDate.getTime() <= threeMonthsFromNow.getTime()) {
-		    newErrors.push("ERROR: ID expired or about to expire in 3 months. ");
-		}
-		// Check if the username matches with the ID number
-		if (id !== responseData.Properties.DOCUMENT_NUMBER) {
-		    newErrors.push("ERROR: Username and ID Number don't match. ");
-		}
-		// Check if ID number is only numeric
-		const isNumeric = /^\d+$/.test(responseData.Properties.DOCUMENT_NUMBER);
-		const idDate = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(0, 2), 10)
-		const idMonth = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(2, 4), 10)
-		const idYear = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(4, 6), 10)
-		// Check if the DoB matches with ID
-		const input_DOB = new Date(dob);
-		const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
-		
-		if (input_DOB.getDate() !== id_DOB.getDate() || input_DOB.getMonth() !== id_DOB.getMonth() || input_DOB.getFullYear() !== id_DOB.getFullYear()) {
-		    newErrors.push("ERROR: Date of Birth doesn't match as per ID. ");
-		}
-		else if(isNumeric && (idDate !== id_DOB.getDate() || idMonth !== id_DOB.getMonth() || idYear !== id_DOB.getFullYear()%100))
-		{
-			newErrors.push("ERROR: Date of Birth doesn't match with ID. ");
-		}
-		
-		// Check if the First Name matches with ID
-		if(responseData.Properties.FIRST_NAME.trim() !== '' && firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
-		    newErrors.push("ERROR: First Name doesn't match with ID. ");
-		}
-		
-		// Check if the Middle Name matches with ID if available
-		if(responseData.Properties.MIDDLE_NAME.trim() !== '' && middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase()) {
-		    newErrors.push("ERROR: Middle Name doesn't match with ID. ");
-		}
-		
-		// Check if the Last Name matches with ID
-		if(responseData.Properties.LAST_NAME.trim() !== '' && lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
-		    newErrors.push("ERROR: Last Name doesn't match with ID. ");
-		}
-		
-		// Set form errors with the array of error messages
-		setHasFormError(newErrors);
-		return (
-		    <div>
-			{formErrors.map((error, index) => (
-			    <p key={index}>{error}</p>
-			))}
-		    </div>
-		);
-            } else {
+		        // Check if the expiry date is within 3 months from now
+		        if (expiryDate.getTime() <= threeMonthsFromNow.getTime()) {
+		            newErrors.push("ERROR: ID expired or about to expire in 3 months.");
+		        }
+		        // Check if the username matches with the ID number
+		        if (id !== responseData.Properties.DOCUMENT_NUMBER) {
+		            newErrors.push("ERROR: Username and ID Number don't match.");
+		        }
+		        // Check if ID number is only numeric
+		        const isNumeric = /^\d+$/.test(responseData.Properties.DOCUMENT_NUMBER);
+		        const idDate = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(0, 2), 10)
+		        const idMonth = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(2, 4), 10)
+		        const idYear = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(4, 6), 10)
+		        // Check if the DoB matches with ID
+		        const input_DOB = new Date(dob);
+		        const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
+		        
+		        if (input_DOB.getDate() !== id_DOB.getDate() || input_DOB.getMonth() !== id_DOB.getMonth() || input_DOB.getFullYear() !== id_DOB.getFullYear()) {
+		            newErrors.push("ERROR: Date of Birth doesn't match as per ID.");
+		        }
+		        else if(isNumeric && (idDate !== id_DOB.getDate() || idMonth !== id_DOB.getMonth() || idYear !== id_DOB.getFullYear()%100))
+		        {
+			        newErrors.push("ERROR: Date of Birth doesn't match with ID.");
+		        }
+		        
+		        // Check if the First Name matches with ID
+		        if(responseData.Properties.FIRST_NAME.trim() === '') {
+		            newErrors.push("ERROR: Upload proper image of ID.");
+		        }
+		        else if(firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
+		            newErrors.push("ERROR: First Name doesn't match with ID.");
+		        }
+		        
+		        // Check if the Middle Name matches with ID if available
+		        if(middleName !== null && responseData.Properties.MIDDLE_NAME.trim() === '') {
+		            newErrors.push("ERROR: Middle Name was entered but not available in ID card.");
+		        }
+		        if(responseData.Properties.MIDDLE_NAME.trim() !== ''){
+		            if(middleName === null || (middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase())) {
+		                newErrors.push("ERROR: Middle Name doesn't match with ID.");
+		            }
+		        }
+		        
+		        // Check if the Last Name matches with ID
+		        if(responseData.Properties.LAST_NAME.trim() === '') {
+		            newErrors.push("ERROR: Upload proper image of ID.");
+		        }
+		        else if(lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
+		            newErrors.push("ERROR: Last Name doesn't match with ID.");
+		        }
+		        
+		        // Set form errors with the array of error messages
+		        setHasFormError(newErrors);
+            } 
+            else {
                 setHasFormError("We are unable to validate your document at this time. Please try again later.")
             }
         })
@@ -661,6 +679,14 @@ const RegisterWithIdCard = () => {
                                     // width="50rem"
                                     as="p"
                                 >
+                                <Heading
+                                    level={5}
+                                    color="black"
+                                    marginTop={tokens.space.small}
+                                    marginBottom={tokens.space.small}
+                                >
+                                    Upload ID/Passport (JPEG / JPG / PNG)   
+                                </Heading>
                                     <Button variation="primary">
                                         <input
                                             type="file"
@@ -800,7 +826,7 @@ const RegisterWithIdCard = () => {
 						        <TableCell>User Name</TableCell>
 						        <TableCell>{id}</TableCell>
 						        <TableCell>{registerFail.properties.Properties.DOCUMENT_NUMBER}</TableCell>
-						        <TableCell>{id === registerFail.properties.Properties.DOCUMENT_NUMBER ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{parseInt(id,10) === parseInt(registerFail.properties.Properties.DOCUMENT_NUMBER,10) ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>First Name</TableCell>
@@ -834,6 +860,12 @@ const RegisterWithIdCard = () => {
 									) ? 'Pass' : 'Fail';
 								  })()}
 								</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Image Check</TableCell>
+						        <TableCell>Image from Liveness</TableCell>
+						        <TableCell>Image from ID</TableCell>
+						        <TableCell>Fail</TableCell>
 						    </TableRow>
 						</Table>
 					)
