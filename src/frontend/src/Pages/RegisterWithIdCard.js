@@ -389,7 +389,7 @@ const RegisterWithIdCard = () => {
         csvContent += `User Input,${id},${firstName},${middleName},${lastName},${dob}\n`;
         csvContent += `From ID,${Report.properties.Properties.DOCUMENT_NUMBER},${Report.properties.Properties.FIRST_NAME},${Report.properties.Properties.MIDDLE_NAME},${Report.properties.Properties.LAST_NAME},${Report.properties.Properties.DATE_OF_BIRTH}\n`;
         csvContent += `Comparison,`
-        if ( parseInt(id,10) === parseInt(Report.properties.Properties.DOCUMENT_NUMBER,10))
+        if ( id === Report.properties.Properties.DOCUMENT_NUMBER)
             csvContent += `Pass,`
         else
             csvContent += `Fail,`
@@ -399,7 +399,7 @@ const RegisterWithIdCard = () => {
             csvContent += `Fail,`
         if ( middleName !== null && middleName.trim().toLowerCase() === Report.properties.Properties.MIDDLE_NAME.trim().toLowerCase())
             csvContent += `Pass,`
-        else
+        else if ( middleName !== null )
             csvContent += `Fail,`
         if ( lastName.trim().toLowerCase() === Report.properties.Properties.LAST_NAME.trim().toLowerCase())
             csvContent += `Pass,`
@@ -885,7 +885,7 @@ const RegisterWithIdCard = () => {
 						        <TableCell>User Name</TableCell>
 						        <TableCell>{id}</TableCell>
 						        <TableCell>{Report.properties.Properties.DOCUMENT_NUMBER}</TableCell>
-						        <TableCell>{parseInt(id,10) === parseInt(Report.properties.Properties.DOCUMENT_NUMBER,10) ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{id === Report.properties.Properties.DOCUMENT_NUMBER ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>First Name</TableCell>
