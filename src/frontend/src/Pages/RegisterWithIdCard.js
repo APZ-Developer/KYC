@@ -55,11 +55,13 @@ const RegisterWithIdCard = () => {
     const [hasformError, setHasFormError] = React.useState('');
     const [sliderValue, setSliderValue] = useState(1);
     const [registerSuccess, setregisterSuccess] = useState();
-    const [registerFail, setregisterFail] = useState();
+    const [Report, setReport] = useState(false);
     const [jsonResponse, setJsonResponse] = useState(null)
     const navigate = useNavigate()
     const [formErrors, setFormErrors] = useState([]);
-
+    const [Download,setDownload] = useState(false);
+    let csvContent = "Item,UserId,First Name,Middle Name, Last Name,Date of Birth\n";
+    
     const getReferenceImage = (image) => {
         setHasFormError('')
         if (!errorCheck() && image !== null && image.ReferenceImage) {
@@ -222,7 +224,7 @@ const RegisterWithIdCard = () => {
         setLivenessStart(false)
         setStep2(true)
         setSliderValue(2)
-        setregisterFail(false)
+        setReport(false)
      // drawRectangleIDCard(properties)
     }
 
@@ -237,7 +239,7 @@ const RegisterWithIdCard = () => {
         setLivenessImageData(null)
         setFormSubmit(true)
         setLivenessStart(true)
-		setregisterFail(false)
+		setReport(false)
     }
 
 
@@ -349,6 +351,8 @@ const RegisterWithIdCard = () => {
         API.post("identityverification", "register-idcard", requestData).then(response => {
             let responseData = response
             setJsonResponse(responseData)
+            let responseReport = JSON.parse(responseData.input)
+            setReport({ "properties": responseReport.inputRequest.Properties })
             if (responseData.status === "SUCCEEDED") {
                 let responseSuccessData = JSON.parse(responseData.output)
                 localStorage.removeItem("userSelectedConfidence")
@@ -356,8 +360,6 @@ const RegisterWithIdCard = () => {
 
             } else {
                 console.log(responseData.error)
-                let responseFailData = JSON.parse(responseData.input)
-                setregisterFail({ "input_id": responseFailData.inputRequest.UserId, "properties": responseFailData.inputRequest.Properties })
                 if (responseData.error === 'FaceNotMatchWithIDCard') {
                     console.log(responseData.error)
                     setHasFormError(ErrorMessage['FaceNotMatchWithIDCard'])
@@ -379,7 +381,59 @@ const RegisterWithIdCard = () => {
 
     }
 
+    const handleDownload = () => {
+        setDownload(true);
+        
+        // Create a CSV string
+        
+        csvContent += `User Input,${id},${firstName},${middleName},${lastName},${dob}\n`;
+        csvContent += `From ID,${Report.properties.Properties.DOCUMENT_NUMBER},${Report.properties.Properties.FIRST_NAME},${Report.properties.Properties.MIDDLE_NAME},${Report.properties.Properties.LAST_NAME},${Report.properties.Properties.DATE_OF_BIRTH}\n`;
+        csvContent += `Comparison,`
+        if ( parseInt(id,10) === parseInt(Report.properties.Properties.DOCUMENT_NUMBER,10))
+            csvContent += `Pass,`
+        else
+            csvContent += `Fail,`
+        if ( firstName.trim().toLowerCase() === Report.properties.Properties.FIRST_NAME.trim().toLowerCase())
+            csvContent += `Pass,`
+        else
+            csvContent += `Fail,`
+        if ( middleName !== null && middleName.trim().toLowerCase() === Report.properties.Properties.MIDDLE_NAME.trim().toLowerCase())
+            csvContent += `Pass,`
+        else
+            csvContent += `Fail,`
+        if ( lastName.trim().toLowerCase() === Report.properties.Properties.LAST_NAME.trim().toLowerCase())
+            csvContent += `Pass,`
+        else
+            csvContent += `Fail,`
+        const dobDate = new Date(dob);
+        const regDate = new Date(Report.properties.Properties.DATE_OF_BIRTH);
+        if ( dob && Report.properties.Properties.DATE_OF_BIRTH)
+            if ( dobDate.getFullYear() === regDate.getFullYear() && dobDate.getMonth() === regDate.getMonth() && dobDate.getDate() === regDate.getDate() )
+            csvContent += `Pass,`
+            else
+                csvContent += `Fail\n`
+        else
+            csvContent += `Fail\n`
+        // Create a Blob containing the CSV data
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
+        // Create a temporary URL for the Blob
+        const url = window.URL.createObjectURL(blob);
+
+        // Create a link element
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'user_details.csv');
+
+        // Simulate a click event to trigger the download
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+    };
 
 
     return (
@@ -455,6 +509,11 @@ const RegisterWithIdCard = () => {
 
                                     </>
                                 }
+                            </>
+                        }
+                        {Report && 
+                            <>
+                                <Button variation="primary" type="submit" onClick={handleDownload}>Finish</Button>
                             </>
                         }
 
@@ -812,47 +871,47 @@ const RegisterWithIdCard = () => {
 
 
                 }
-                {registerSuccess && < Navigate
+                {registerSuccess && Download && < Navigate
                     to='/success'
                     state={registerSuccess
                     }
                 >
                 </Navigate >}
-                {registerFail &&
+                {Report &&
                 	(
 						<Table variation="striped" color="black">
 						    {/* Table rows */}
 						    <TableRow>
 						        <TableCell>User Name</TableCell>
 						        <TableCell>{id}</TableCell>
-						        <TableCell>{registerFail.properties.Properties.DOCUMENT_NUMBER}</TableCell>
-						        <TableCell>{parseInt(id,10) === parseInt(registerFail.properties.Properties.DOCUMENT_NUMBER,10) ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{Report.properties.Properties.DOCUMENT_NUMBER}</TableCell>
+						        <TableCell>{parseInt(id,10) === parseInt(Report.properties.Properties.DOCUMENT_NUMBER,10) ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>First Name</TableCell>
 						        <TableCell>{firstName}</TableCell>
-						        <TableCell>{registerFail.properties.Properties.FIRST_NAME}</TableCell>
-						        <TableCell>{firstName.trim().toLowerCase() === registerFail.properties.Properties.FIRST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{Report.properties.Properties.FIRST_NAME}</TableCell>
+						        <TableCell>{firstName.trim().toLowerCase() === Report.properties.Properties.FIRST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>Middle Name</TableCell>
 						        <TableCell>{middleName}</TableCell>
-						        <TableCell>{registerFail.properties.Properties.MIDDLE_NAME}</TableCell>
-						        <TableCell>{middleName.trim().toLowerCase() === registerFail.properties.Properties.MIDDLE_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{Report.properties.Properties.MIDDLE_NAME}</TableCell>
+						        <TableCell>{middleName !== null && middleName.trim().toLowerCase() === Report.properties.Properties.MIDDLE_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>Last Name</TableCell>
 						        <TableCell>{lastName}</TableCell>
-						        <TableCell>{registerFail.properties.Properties.LAST_NAME}</TableCell>
-						        <TableCell>{lastName.trim().toLowerCase() === registerFail.properties.Properties.LAST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{Report.properties.Properties.LAST_NAME}</TableCell>
+						        <TableCell>{lastName.trim().toLowerCase() === Report.properties.Properties.LAST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>Date of Birth</TableCell>
 						        <TableCell>{dob}</TableCell>
-						        <TableCell>{registerFail.properties.Properties.DATE_OF_BIRTH}</TableCell>
-						        <TableCell>{dob && registerFail.properties.Properties.DATE_OF_BIRTH && (() => {
+						        <TableCell>{Report.properties.Properties.DATE_OF_BIRTH}</TableCell>
+						        <TableCell>{dob && Report.properties.Properties.DATE_OF_BIRTH && (() => {
 									const dobDate = new Date(dob);
-									const regDate = new Date(registerFail.properties.Properties.DATE_OF_BIRTH);
+									const regDate = new Date(Report.properties.Properties.DATE_OF_BIRTH);
 									return (
 									  dobDate.getFullYear() === regDate.getFullYear() &&
 									  dobDate.getMonth() === regDate.getMonth() &&
@@ -865,7 +924,7 @@ const RegisterWithIdCard = () => {
 						        <TableCell>Image Check</TableCell>
 						        <TableCell>Image from Liveness</TableCell>
 						        <TableCell>Image from ID</TableCell>
-						        <TableCell>Fail</TableCell>
+						        <TableCell>{registerSuccess ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						</Table>
 					)
