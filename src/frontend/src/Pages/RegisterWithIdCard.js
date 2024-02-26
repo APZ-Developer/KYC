@@ -271,7 +271,7 @@ const RegisterWithIdCard = () => {
 		        }
 		        // Check if the username matches with the ID number
 		        if (id !== responseData.Properties.DOCUMENT_NUMBER) {
-		            newErrors.push("ERROR: Username and ID Number don't match.");
+		            newErrors.push("ERROR: Identity Number and ID Number don't match.");
 		        }
 		        // Check if ID number is only numeric
 		        const isNumeric = /^\d+$/.test(responseData.Properties.DOCUMENT_NUMBER);
@@ -299,11 +299,11 @@ const RegisterWithIdCard = () => {
 		        }
 		        
 		        // Check if the Middle Name matches with ID if available
-		        if(middleName !== null && responseData.Properties.MIDDLE_NAME.trim() === '') {
+		        if(middleName !== null && middleName.trim() !== '' && responseData.Properties.MIDDLE_NAME.trim() === '') {
 		            newErrors.push("ERROR: Middle Name was entered but not available in ID card.");
 		        }
 		        if(responseData.Properties.MIDDLE_NAME.trim() !== ''){
-		            if(middleName === null || (middleName.toLowerCase() !== responseData.Properties.MIDDLE_NAME.toLowerCase())) {
+		            if(middleName === null || (middleName.trim().toLowerCase() !== responseData.Properties.MIDDLE_NAME.trim().toLowerCase())) {
 		                newErrors.push("ERROR: Middle Name doesn't match with ID.");
 		            }
 		        }
@@ -317,7 +317,10 @@ const RegisterWithIdCard = () => {
 		        }
 		        
 		        // Set form errors with the array of error messages
-		        setHasFormError(newErrors);
+		        if (newErrors.length > 0)
+		        {
+		            setHasFormError(newErrors);
+		        }
             } 
             else {
                 setHasFormError("We are unable to validate your document at this time. Please try again later.")
@@ -537,7 +540,7 @@ const RegisterWithIdCard = () => {
                                     <TextField
                                         label={
                                             <Text>
-                                                Username
+                                                Identity Number
                                                 <Text as="span" fontSize="0.8rem" color="red">
                                                     {' '}
                                                     (required)
@@ -549,7 +552,7 @@ const RegisterWithIdCard = () => {
                                         size="large"
                                         color="black"
                                         hasError={error.idError}
-                                        errorMessage="Please enter username"
+                                        errorMessage="Please enter Identity Number"
                                         value={id}
                                         innerStartComponent={
                                             <FieldGroupIcon ariaLabel="" >
@@ -662,7 +665,7 @@ const RegisterWithIdCard = () => {
                                         color="black"
                                         value={dob}
                                         hasError={error.dobError}
-                                        errorMessage="Please enter date of birth (yyyy-mm-dd)"
+                                        errorMessage="Please enter date of birth (dd/mm/yyyy)"
                                         innerStartComponent={
                                             <FieldGroupIcon ariaLabel="">
                                                 <ImCalendar />
