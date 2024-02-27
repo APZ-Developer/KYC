@@ -270,14 +270,15 @@ const RegisterWithIdCard = () => {
 		            newErrors.push("ERROR: ID expired or about to expire in 3 months.");
 		        }
 		        // Check if the username matches with the ID number
-		        if (id !== responseData.Properties.DOCUMENT_NUMBER) {
+		        responseData.Properties.ID_NUMBER = responseData.Properties.ID_NUMBER.replace(/\s/g, '').trim();
+		        if (id !== responseData.Properties.ID_NUMBER) {
 		            newErrors.push("ERROR: Identity Number and ID Number don't match.");
 		        }
 		        // Check if ID number is only numeric
-		        const isNumeric = /^\d+$/.test(responseData.Properties.DOCUMENT_NUMBER);
-		        const idDate = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(0, 2), 10)
-		        const idMonth = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(2, 4), 10)
-		        const idYear = parseInt(responseData.Properties.DOCUMENT_NUMBER.substring(4, 6), 10)
+		        const isNumeric = /^\d+$/.test(responseData.Properties.ID_NUMBER);
+		        const idYear = parseInt(responseData.Properties.ID_NUMBER.substring(0, 2), 10);
+		        const idMonth = parseInt(responseData.Properties.ID_NUMBER.substring(2, 4), 10) - 1;
+		        const idDate = parseInt(responseData.Properties.ID_NUMBER.substring(4, 6), 10);
 		        // Check if the DoB matches with ID
 		        const input_DOB = new Date(dob);
 		        const id_DOB = new Date(responseData.Properties.DATE_OF_BIRTH);
@@ -292,7 +293,7 @@ const RegisterWithIdCard = () => {
 		        
 		        // Check if the First Name matches with ID
 		        if(responseData.Properties.FIRST_NAME.trim() === '') {
-		            newErrors.push("ERROR: Upload proper image of ID.");
+		            newErrors.push("ERROR: Name couldn't be extracted. Upload proper image of ID.");
 		        }
 		        else if(firstName.toLowerCase() !== responseData.Properties.FIRST_NAME.toLowerCase()) {
 		            newErrors.push("ERROR: First Name doesn't match with ID.");
@@ -310,7 +311,8 @@ const RegisterWithIdCard = () => {
 		        
 		        // Check if the Last Name matches with ID
 		        if(responseData.Properties.LAST_NAME.trim() === '') {
-		            newErrors.push("ERROR: Upload proper image of ID.");
+		            if(responseData.Properties.FIRST_NAME.trim() !== '') 
+		                newErrors.push("ERROR: Name couldn't be extracted. Upload proper image of ID.");
 		        }
 		        else if(lastName.toLowerCase() !== responseData.Properties.LAST_NAME.toLowerCase()) {
 		            newErrors.push("ERROR: Last Name doesn't match with ID.");
@@ -390,9 +392,9 @@ const RegisterWithIdCard = () => {
         // Create a CSV string
         
         csvContent += `User Input,${id},${firstName},${middleName},${lastName},${dob}\n`;
-        csvContent += `From ID,${Report.properties.Properties.DOCUMENT_NUMBER},${Report.properties.Properties.FIRST_NAME},${Report.properties.Properties.MIDDLE_NAME},${Report.properties.Properties.LAST_NAME},${Report.properties.Properties.DATE_OF_BIRTH}\n`;
+        csvContent += `From ID,${Report.properties.Properties.DOCUMENT_NUMBER}/${Report.properties.Properties.ID_NUMBER},${Report.properties.Properties.FIRST_NAME},${Report.properties.Properties.MIDDLE_NAME},${Report.properties.Properties.LAST_NAME},${Report.properties.Properties.DATE_OF_BIRTH}\n`;
         csvContent += `Comparison,`
-        if ( id === Report.properties.Properties.DOCUMENT_NUMBER)
+        if ( id === Report.properties.Properties.ID_NUMBER)
             csvContent += `Pass,`
         else
             csvContent += `Fail,`
@@ -885,10 +887,16 @@ const RegisterWithIdCard = () => {
 						<Table variation="striped" color="black">
 						    {/* Table rows */}
 						    <TableRow>
-						        <TableCell>User Name</TableCell>
+						        <TableCell style={{ fontWeight: 'bold', color: 'blue' }}>Fields</TableCell>
+						        <TableCell style={{ fontWeight: 'bold', color: 'blue' }}>User Input</TableCell>
+						        <TableCell style={{ fontWeight: 'bold', color: 'blue' }}>Identity Card</TableCell>
+						        <TableCell style={{ fontWeight: 'bold', color: 'blue' }}>Status</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Identity Number</TableCell>
 						        <TableCell>{id}</TableCell>
-						        <TableCell>{Report.properties.Properties.DOCUMENT_NUMBER}</TableCell>
-						        <TableCell>{id === Report.properties.Properties.DOCUMENT_NUMBER ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{Report.properties.Properties.ID_NUMBER}</TableCell>
+						        <TableCell>{id === Report.properties.Properties.ID_NUMBER ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>First Name</TableCell>
@@ -900,7 +908,7 @@ const RegisterWithIdCard = () => {
 						        <TableCell>Middle Name</TableCell>
 						        <TableCell>{middleName}</TableCell>
 						        <TableCell>{Report.properties.Properties.MIDDLE_NAME}</TableCell>
-						        <TableCell>{middleName !== null && middleName.trim().toLowerCase() === Report.properties.Properties.MIDDLE_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
+						        <TableCell>{middleName ? ( middleName.trim().toLowerCase() === Report.properties.Properties.MIDDLE_NAME.trim().toLowerCase() ? 'Pass' : 'Fail') : 'N/A' }</TableCell>
 						    </TableRow>
 						    <TableRow>
 						        <TableCell>Last Name</TableCell>
@@ -909,7 +917,26 @@ const RegisterWithIdCard = () => {
 						        <TableCell>{lastName.trim().toLowerCase() === Report.properties.Properties.LAST_NAME.trim().toLowerCase() ? 'Pass' : 'Fail'}</TableCell>
 						    </TableRow>
 						    <TableRow>
-						        <TableCell>Date of Birth</TableCell>
+						        <TableCell>Date of Birth From ID Number</TableCell>
+						        <TableCell>
+						            {/^\d+$/.test(Report.properties.Properties.ID_NUMBER) ? parseInt(Report.properties.Properties.ID_NUMBER.substring(0,6), 10) : 'N/A'}
+						        </TableCell>
+						        <TableCell>{/^\d+$/.test(Report.properties.Properties.ID_NUMBER) ? Report.properties.Properties.DATE_OF_BIRTH : 'N/A'}</TableCell>
+						        <TableCell>{/^\d+$/.test(Report.properties.Properties.ID_NUMBER) && (() => {
+									const idYear = parseInt(Report.properties.Properties.ID_NUMBER.substring(0,2), 10);
+									const idMonth = parseInt(Report.properties.Properties.ID_NUMBER.substring(2,4), 10) - 1;
+									const idDate = parseInt(Report.properties.Properties.ID_NUMBER.substring(4,6), 10)
+									const regDate = new Date(Report.properties.Properties.DATE_OF_BIRTH);
+									return (
+									  idYear === regDate.getFullYear() &&
+									  idMonth === regDate.getMonth() &&
+									  idDate === regDate.getDate()
+									) ? 'Pass' : 'Fail';
+								  })()}
+								</TableCell>
+						    </TableRow>
+						    <TableRow>
+						        <TableCell>Date of Birth Input vs ID</TableCell>
 						        <TableCell>{dob}</TableCell>
 						        <TableCell>{Report.properties.Properties.DATE_OF_BIRTH}</TableCell>
 						        <TableCell>{dob && Report.properties.Properties.DATE_OF_BIRTH && (() => {

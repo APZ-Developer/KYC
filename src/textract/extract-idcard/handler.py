@@ -59,6 +59,33 @@ def analyze_id(inputRequest:InputRequest)->dict:
     logger.error('Textract Internal Server Error.')
     raise InvalidImageError('ProvisionedThroughputExceeded')
 
+#@xray_recorder.capture('DocumentParser::extract_form')
+def analyze_document(inputRequest:InputRequest):
+  '''
+  Query the ID Number using Amazon Textract.
+  '''
+  try:
+    response = textract_client.analyze_document(
+      Document={'Bytes': inputRequest.idcard_image_bytes},
+      FeatureTypes=['QUERIES'],
+      QueriesConfig={'Queries': [{'Text':'What is the Identity No'}]})
+    return response
+  except textract_client.exceptions.UnsupportedDocumentException:
+    logger.error('User %s provided an invalid document.' % inputRequest.user_id)
+    raise InvalidImageError('UnsupportedDocument')
+  except textract_client.exceptions.DocumentTooLargeException:
+    logger.error('User %s provided document too large.' % inputRequest.user_id)
+    raise InvalidImageError('DocumentTooLarge')
+  except textract_client.exceptions.ProvisionedThroughputExceededException:
+    logger.error('Textract throughput exceeded.')
+    raise InvalidImageError('ProvisionedThroughputExceeded')
+  except textract_client.exceptions.ThrottlingException:
+    logger.error('Textract throughput exceeded.')
+    raise InvalidImageError('ThrottlingException')
+  except textract_client.exceptions.InternalServerError:
+    logger.error('Textract Internal Server Error.')
+    raise InvalidImageError('ProvisionedThroughputExceeded')
+      
 def function_main(event:Mapping[str,Any],_=None):
   '''
   Main function handler.
@@ -91,6 +118,8 @@ def function_main(event:Mapping[str,Any],_=None):
         "Bytes": inputRequest.idcard_image_bytes
     }
     )
+    
+    result = analyze_document(inputRequest)
   
 
   '''
@@ -102,6 +131,14 @@ def function_main(event:Mapping[str,Any],_=None):
     key = field['Type']['Text']
     value = field['ValueDetection']['Text']    
     properties[key] = value
+
+  if len(result["Blocks"]) > 2 :
+    document_fields:List[dict] = result['Blocks']
+    for field in document_fields:
+        if field['BlockType'] == 'QUERY_RESULT':
+            key = 'ID_NUMBER'
+            value = field['Text']
+            properties[key] = value
 
   return {
     'UserId': inputRequest.user_id,
@@ -132,3 +169,4 @@ if __name__ == '__main__':
   payload = read_example_file('payload.json')
   function_main(payload)
   xray_recorder.end_segment()
+

@@ -171,8 +171,6 @@ function Liveness({ referenceImage, livenessImageData }) {
                                 {imageData &&
                                     <>
 
-                                        <Heading level={5} marginTop={tokens.space.large} marginBottom={tokens.space.large}>Selected liveness score threshold: {imageData.userSelectedConfidence}%</Heading>
-
                                         {imageData.userSelectedConfidence > imageData.Confidence &&
                                             <Alert
                                                 variation="error"
@@ -180,7 +178,7 @@ function Liveness({ referenceImage, livenessImageData }) {
                                                 hasIcon={true}
                                                 heading=""
                                             >
-                                                Check unsuccessfull. Try again!
+                                                Check unsuccessfull. Liveness score below 80%. Try again!
                                             </Alert>
 
                                         }
