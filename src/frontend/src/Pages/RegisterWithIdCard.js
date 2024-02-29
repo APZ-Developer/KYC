@@ -928,7 +928,7 @@ const RegisterWithIdCard = () => {
 									const idDate = parseInt(Report.properties.Properties.ID_NUMBER.substring(4,6), 10)
 									const regDate = new Date(Report.properties.Properties.DATE_OF_BIRTH);
 									return (
-									  idYear === regDate.getFullYear() &&
+									  idYear === regDate.getFullYear()%100 &&
 									  idMonth === regDate.getMonth() &&
 									  idDate === regDate.getDate()
 									) ? 'Pass' : 'Fail';
